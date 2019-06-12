@@ -1,0 +1,51 @@
+@startuml
+title MQTT client broker communication
+
+participant Client
+participant Broker
+participant Backend
+
+
+Client -> Broker: CONNECT
+
+Broker -> Client: CONNACK
+
+Backend -> Broker: CONNECT
+
+Broker -> Backend: CONNACK
+
+Client -> Broker: PUBLISH
+
+note left 
+            temperature/room1
+            20°
+            ✔ retain
+end note
+
+Backend -> Broker: SUBSCRIBE
+
+note right: temperature/room1
+
+Broker -> Backend: PUBLISH
+
+note right
+            temperature/room1
+            20°
+end note
+
+Client -> Broker: PUBLISH
+
+note left 
+            temperature/room1
+            20°
+end note
+
+Broker -> Backend: PUBLISH
+note right
+            temperature/room1
+            20°
+end note
+
+Backend -> Broker: DISCONNECT
+
+@enduml

@@ -11,6 +11,7 @@ import io.vertx.core.http.HttpHeaders
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
+import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.kotlin.ext.web.api.contract.RouterFactoryOptions
 
 
@@ -21,7 +22,7 @@ class MainVerticle : AbstractVerticle() {
   override fun start(startFuture: Future<Void>) {
 
     var router = defineRouter()
-    
+    deployVerticles()
     vertx
       .createHttpServer()
       .requestHandler (router)
@@ -37,11 +38,14 @@ class MainVerticle : AbstractVerticle() {
 
   fun defineRouter():Router {
     var router = Router.router(vertx)
+    router.route().handler(BodyHandler.create());
     val eb = vertx.eventBus()
 
-    var create = router.route(HttpMethod.POST, "/deers")
+    var create = router.route(HttpMethod.POST, "/books")
     create.handler(){ rt ->
+        println (rt.bodyAsString)
       val json = rt.bodyAsJson
+
       val response = rt.response()
       response.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
       eb.send("books.post", json) { msg: AsyncResult<Message<JsonObject>> ->
@@ -56,15 +60,25 @@ class MainVerticle : AbstractVerticle() {
   }
 
   fun deployVerticles (): Future<Void> {
-    var future = Future.future<Void>()
-    var retriever = ConfigRetriever.create(vertx)
-    retriever.getConfig(){ handler ->
-      if (handler.succeeded()){
-        val config = handler.result()
-        val deploymentOptions = DeploymentOptions()
-        deploymentOptions.config = config
-        vertx.deployVerticle(de.tarent.academy.iotcon.vertx.mqtt.BookRepositoryVerticle::class.qualifiedName, deploymentOptions)
+      var future = Future.future<Void>()
+      var retriever = ConfigRetriever.create(vertx)
+      retriever.getConfig() { handler ->
+          if (handler.succeeded()) {
+              val config = handler.result()
+              val deploymentOptions = DeploymentOptions()
+              deploymentOptions.config = config
+              vertx.deployVerticle(
+                  de.tarent.academy.iotcon.vertx.mqtt.BookRepositoryVerticle::class.qualifiedName,
+                  deploymentOptions
+              ){
+                  if (it.succeeded()){
+                      future.complete()
+                  }else{
+                      future.fail("Deployment of Repo failed")
+                  }
+              }
+          }
       }
-    }
+      return future;
   }
 }

@@ -13,7 +13,7 @@ public class BookRepositoryVerticle extends AbstractVerticle {
     MongoClient client;
 
     final static String COLLECTION = "books";
-    final static String COUNTER = "counter";
+    final static String COUNTER = "counters";
     final static String SEQUENCE = "bookid";
     final static String SEQUENCE_VALUE = "sequence_value";
 
@@ -42,17 +42,46 @@ public class BookRepositoryVerticle extends AbstractVerticle {
         }
         return isComplete;
     }
+    private JsonObject createSequenceCommand() {
+        JsonObject updateCommand = new JsonObject().put("$inc", new JsonObject().put(SEQUENCE_VALUE, 1L));
+        return updateCommand;
+    }
 
+    /*
+     * {
+     * findAndModify: <collection-name>,
+     * query: <document>,
+     * sort: <document>,
+     * remove: <boolean>,
+     * update: <document>,
+     * new: <boolean>,
+     * fields: <document>,
+     * upsert: <boolean>,
+     * bypassDocumentValidation: <boolean>,
+     * writeConcern: <document>
+     * }
+     */
+    private JsonObject createFindAndModify(JsonObject query, JsonObject updateCommand) {
+        JsonObject retOb = new JsonObject();
+        retOb.put("findAndModify", COUNTER);
+        retOb.put("query", query);
+        retOb.put("update", updateCommand);
+        retOb.put("new", true);
+        return retOb;
+    }
 
     private Future<Integer> findNextId(){
         Future future = Future.future();
         MongoClient mongoclient = getMongoClient();
 
         JsonObject query = new JsonObject().put("_id", SEQUENCE);
-        JsonObject update = new JsonObject().put("$inc", new JsonObject().put(SEQUENCE_VALUE, 1));
-        mongoclient.findOneAndUpdate(COUNTER, query, update, handler -> {
+        JsonObject update = createSequenceCommand();
+        JsonObject command = createFindAndModify(query, update);
+        mongoclient.runCommand("findAndModify", command, handler -> {
             if (handler.succeeded()){
-                JsonObject sequence = handler.result();
+                System.out.println (handler.result());
+                JsonObject sequence = handler.result().getJsonObject("value");
+
                 future.complete(sequence.getInteger(SEQUENCE_VALUE));
             }else{
                 future.fail("New ID couldn't be generated");

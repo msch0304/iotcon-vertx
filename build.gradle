@@ -34,6 +34,7 @@ dependencies {
   implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
   implementation "io.vertx:vertx-mqtt:$vertxVersion"
   implementation "io.vertx:vertx-config:$vertxVersion"
+  implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 
   testImplementation "io.vertx:vertx-junit5:$vertxVersion"
   testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitJupiterEngineVersion"

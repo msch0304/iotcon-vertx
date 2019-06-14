@@ -1,0 +1,6 @@
+{
+  "mongo_url" : "mongodb://iotcon:dockerpw@localhost:27117/iotcon",
+  "topic_subscribe" : "cs/*",
+  "topic_publish" : "cr/"
+
+}

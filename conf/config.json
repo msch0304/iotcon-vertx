@@ -1,6 +1,7 @@
 {
   "mongo_url" : "mongodb://iotcon:dockerpw@localhost:27117/iotcon",
-  "topic_subscribe" : "cs/*",
-  "topic_publish" : "cr/"
-
+  "topic_subscribe" : "books_s/#",
+  "topic_publish" : "books_r",
+  "broker_uri": "localhost",
+  "broker_port": 1883
 }
